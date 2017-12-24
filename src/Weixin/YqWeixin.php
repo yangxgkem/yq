@@ -6,13 +6,12 @@ use YQ\YqCurl;
 use YQ\YqExtend;
 use YQ\Caches\YqWeixinAccessTokenCache;
 use YQ\Caches\YqWeixinJsapiTicketCache;
-use YQ\Weixin\TraitOauth;
-use YQ\Weixin\TraitJssdk;
+use YQ\Weixin\Oauth;
+use YQ\Weixin\Jssdk;
+use YQ\Weixin\Pay;
 
 class YqWeixin
 {
-    use TraitOauth, TraitJssdk
-
     /**
      * 配置信息
      * @var array
@@ -35,6 +34,11 @@ class YqWeixin
     public function __construct(array $config)
     {
         $this->configList = $config;
+
+        $this->oauth = new Oauth($this);
+        $this->jssdk = new Jssdk($this);
+        $this->jssdk = new Jssdk($this);
+        $this->pay = new Pay($this);
     }
 
     /**

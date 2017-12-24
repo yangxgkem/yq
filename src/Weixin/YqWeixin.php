@@ -6,16 +6,33 @@ use YQ\YqCurl;
 use YQ\YqExtend;
 use YQ\Caches\YqWeixinAccessTokenCache;
 use YQ\Caches\YqWeixinJsapiTicketCache;
+use YQ\Weixin\TraitOauth;
+use YQ\Weixin\TraitJssdk;
 
 class YqWeixin
 {
+    use TraitOauth, TraitJssdk
+
     /**
      * 配置信息
      * @var array
      */
     protected $configList;
 
-    public function __construct($config)
+    /**
+     * 获取单例实例化对象
+     * @return obj
+     */
+    public static function getInstance(array $config)
+    {
+        $appid = $config['appid'];
+        if (!isset(self::$_instance[$appid])) {
+            self::$_instance[$appid] = new YqWeixin($config);
+        }
+        return self::$_instance[$appid];
+    }
+
+    public function __construct(array $config)
     {
         $this->configList = $config;
     }
@@ -26,7 +43,7 @@ class YqWeixin
      * @param  mixed  $default 如果找不到数据则返回默认值
      * @return mixed
      */
-    public function config($key, $default=null)
+    public function config(string $key, $default=null)
     {
         $array = $this->configList;
 
@@ -121,98 +138,5 @@ class YqWeixin
         } else {
             return $data['jsapi_ticket'];
         }
-    }
-
-    /**
-     * 前端使用js api 初始化参数
-     * @return array
-     */
-    public function getJsapiSignature($url)
-    {
-        $appid = $this->config('appid');
-        $jsapi_ticket = $this->getJsapiTicket();
-
-        // 注意 URL 一定要动态获取，不能 hardcode.
-        $timestamp = time();
-        $nonce_str = YqExtend::getRandom();
-        // 这里参数的顺序要按照 key 值 ASCII 码升序排序
-        $string = "jsapi_ticket=$jsapi_ticket&noncestr=$nonce_str&timestamp=$timestamp&url=$url";
-
-        $signature = sha1($string);
-        $sign_package = [
-            "appid"         => $appid, //公共号 appid
-            "nonce_str"     => $nonce_str, //随机字符串
-            "timestamp"     => $timestamp, //时间戳
-            "url"           => $url, //完整url #打后除掉
-            "signature"     => $signature, //sha1签名
-            "raw_string"    => $string //签名前原文字符串
-        ];
-
-        return $sign_package;
-    }
-
-    /**
-     * 用户微信授权登录地址
-     * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
-     * @param  string $callback_url 授权成功回调地址
-     * @return string
-     */
-    public function getLoginOauthUrl($callback_url)
-    {
-        $redirect_uri = urlencode($callback_url);
-        $appid = $this->config('appid');
-        $other = "response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
-
-        $url = "https://open.weixin.qq.com/connect/oauth2/authorize";
-        $url .= "?appid={$appid}&redirect_uri={$redirect_uri}&{$other}";
-        return $url;
-    }
-
-    /**
-     * 通过网页授权登陆回来的 code 换取网页授权access_token和openid
-     * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
-     * @param  string $code 授权回调回来参数
-     * @return array
-     */
-    public function getOauthAccessToken($code)
-    {
-        $url = "https://api.weixin.qq.com/sns/oauth2/access_token";
-        $appid = $this->config('appid');
-        $appkey = $this->config('secret');
-        $params = "appid={$appid}&secret={$appkey}&code={$code}&grant_type=authorization_code";
-
-        $res = YqCurl::curl($url, $params, 0, 1);
-        if (!$res) {
-            return false;
-        }
-        $res = json_decode($res, true);
-        if (isset($res['errcode'])) {
-            return false;
-        }
-
-        return $res;
-    }
-
-    /**
-     * 通过access_token和openid 获取用户的基本信息
-     * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
-     * @param  string $access_token 网页授权access_token
-     * @param  string $openid       用户openid
-     * @return array
-     */
-    public function getUserInfo($access_token, $openid)
-    {
-        $url = "https://api.weixin.qq.com/sns/userinfo";
-        $params = "access_token={$access_token}&openid={$openid}&lang=zh_CN";
-        $res = YqCurl::curl($url, $params, 0, 1);
-        if (!$res) {
-            return false;
-        }
-        $res = json_decode($res, true);
-        if (isset($res['errcode'])) {
-            return false;
-        }
-
-        return $res;
     }
 }

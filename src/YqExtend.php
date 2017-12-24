@@ -127,4 +127,37 @@ class YqExtend
 
         return $thisip;
     }
+
+    /**
+     * 获取服务端ip
+     * @return string
+     */
+    public static function getServerIp()
+    {
+        if (!empty($_SERVER['SERVER_ADDR'])) {
+            $ip = $_SERVER['SERVER_ADDR'];
+        } elseif (!empty($_SERVER['SERVER_NAME'])) {
+            $ip = gethostbyname($_SERVER['SERVER_NAME']);
+        } else {
+            // for php-cli(phpunit etc.)
+            $ip = defined('PHPUNIT_RUNNING') ? '127.0.0.1' : gethostbyname(gethostname());
+        }
+
+        return filter_var($ip, FILTER_VALIDATE_IP) ?: '127.0.0.1';
+    }
+
+    /**
+     * 获取当前访问url，包括get参数 http://url?xxx
+     * @return [type] [description]
+     */
+    public static function currentUrl()
+    {
+        $protocol = 'http://';
+
+        if (!empty($_SERVER['HTTPS']) || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? 'http') === 'https') {
+            $protocol = 'https://';
+        }
+
+        return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+    }
 }

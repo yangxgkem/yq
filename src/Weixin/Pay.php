@@ -89,6 +89,8 @@ class TraitPay
         return $data;
     }
 
+    //--------------------------------------------------------------------------
+
     /**
      * 统一下单接口
      * https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_1

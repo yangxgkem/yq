@@ -2,15 +2,28 @@
 
 namespace YQ\Weixin;
 
-trait TraitOauth
+use YQ\Weixin\YqWeixin;
+
+class Oauth
 {
+    /**
+     * YQ\Weixin\YqWeixins 实例化对象
+     * @var YqWeixins
+     */
+    private $yqweixin;
+
+    public function __construct($yqweixin)
+    {
+        $this->yqweixin = $yqweixin;
+    }
+
     /**
      * 发起授权
      * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
      * @param  string $callback_url 授权成功回调地址
      * @return string
      */
-    public function oauthLoginUrl(string $callback_url)
+    public function loginUrl(string $callback_url)
     {
         $redirect_uri = urlencode($callback_url);
         $appid = $this->config('appid');
@@ -28,7 +41,7 @@ trait TraitOauth
      * @param  string $code 授权回调回来参数
      * @return array
      */
-    public function oauthUser($code)
+    public function user($code)
     {
         $url = "https://api.weixin.qq.com/sns/oauth2/access_token";
         $appid = $this->config('appid');

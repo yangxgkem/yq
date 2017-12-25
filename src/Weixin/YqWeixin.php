@@ -37,7 +37,6 @@ class YqWeixin
 
         $this->oauth = new Oauth($this);
         $this->jssdk = new Jssdk($this);
-        $this->jssdk = new Jssdk($this);
         $this->pay = new Pay($this);
     }
 

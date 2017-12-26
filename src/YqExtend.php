@@ -80,7 +80,7 @@ class YqExtend
      */
     public static function uniqid32($id = 'uniqid')
     {
-        return self::md5($id . time() . self::getRandom() . uniqid());
+        return md5($id . time() . self::getRandom() . uniqid());
     }
 
     /**

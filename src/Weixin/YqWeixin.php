@@ -25,6 +25,12 @@ class YqWeixin
     protected $objList;
 
     /**
+     * 单例模式
+     * @var array
+     */
+    protected static $_instance = [];
+
+    /**
      * 获取单例实例化对象
      * @return obj
      */
@@ -123,7 +129,7 @@ class YqWeixin
      * 获取微信 access_token
      * @return string
      */
-    public function getAccessToken($appid)
+    public function getAccessToken()
     {
         $appid = $this->config('appid');
         $data = YqWeixinAccessTokenCache::getInstance()->get($appid);

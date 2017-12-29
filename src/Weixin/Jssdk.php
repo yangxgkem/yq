@@ -3,6 +3,7 @@
 namespace YQ\Weixin;
 
 use YQ\Weixin\YqWeixin;
+use YQ\YqExtend;
 
 class Jssdk
 {
@@ -27,8 +28,8 @@ class Jssdk
      */
     public function bulidConfig(array $apis, bool $debug, string $url)
     {
-        $appid = $this->config('appid');
-        $jsapi_ticket = $this->getJsapiTicket();
+        $appid = $this->yqweixin->config('appid');
+        $jsapi_ticket = $this->yqweixin->getJsapiTicket();
 
         // 注意 URL 一定要动态获取，不能 hardcode.
         $timestamp = time();

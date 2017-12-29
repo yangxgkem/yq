@@ -19,6 +19,12 @@ class YqWeixin
     protected $configList;
 
     /**
+     * 功能类实例化
+     * @var array
+     */
+    protected $objList;
+
+    /**
      * 获取单例实例化对象
      * @return obj
      */
@@ -34,10 +40,33 @@ class YqWeixin
     public function __construct(array $config)
     {
         $this->configList = $config;
+        $this->objList = [];
+    }
 
-        $this->oauth = new Oauth($this);
-        $this->jssdk = new Jssdk($this);
-        $this->pay = new Pay($this);
+    /**
+     * 通过魔法函数来按需加载功能类，提高性能
+     * @param  string $name 功能类名称
+     * @return obj
+     */
+    public function __get($name)
+    {
+        if (!isset($this->objList[$name])) {
+            switch ($name) {
+                case 'oauth':
+                    $this->objList[$name] = new Oauth($this);
+                    break;
+                case 'jssdk':
+                    $this->objList[$name] = new Jssdk($this);
+                    break;
+                case 'pay':
+                    $this->objList[$name] = new Pay($this);
+                    break;
+            }
+        }
+
+        if (isset($this->objList[$name])) {
+            return $this->objList[$name];
+        }
     }
 
     /**

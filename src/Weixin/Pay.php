@@ -4,7 +4,7 @@ namespace YQ\Weixin;
 
 use YQ\Weixin\YqWeixin;
 
-class TraitPay
+class Pay
 {
     /**
      * YQ\Weixin\YqWeixins 实例化对象

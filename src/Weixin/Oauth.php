@@ -26,7 +26,7 @@ class Oauth
     public function loginUrl(string $callback_url)
     {
         $redirect_uri = urlencode($callback_url);
-        $appid = $this->config('appid');
+        $appid = $this->yqweixin->config('appid');
         $other = "response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
 
         $url = "https://open.weixin.qq.com/connect/oauth2/authorize";
@@ -44,8 +44,8 @@ class Oauth
     public function user($code)
     {
         $url = "https://api.weixin.qq.com/sns/oauth2/access_token";
-        $appid = $this->config('appid');
-        $appkey = $this->config('secret');
+        $appid = $this->yqweixin->config('appid');
+        $appkey = $this->yqweixin->config('secret');
         $params = "appid={$appid}&secret={$appkey}&code={$code}&grant_type=authorization_code";
 
         $res = YqCurl::curl($url, $params, 0, 1);

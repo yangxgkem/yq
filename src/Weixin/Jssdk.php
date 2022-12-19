@@ -3,6 +3,7 @@
 namespace YQ\Weixin;
 
 use YQ\Weixin\YqWeixin;
+use YQ\Weixin\PayFunc;
 use YQ\YqExtend;
 
 class Jssdk
@@ -65,7 +66,7 @@ class Jssdk
             'package' => "prepay_id={$prepay_id}",
             'signType' => 'MD5',
         ];
-        $params['paySign'] = $this->yqweixin->pay->makeSign($params);
+        $params['paySign'] = PayFunc::makeSign($params, $this->yqweixin->config('key'));
 
         return $params;
     }

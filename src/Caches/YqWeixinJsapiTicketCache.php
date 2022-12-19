@@ -8,6 +8,12 @@ use YQ\YqExtend;
 class YqWeixinJsapiTicketCache extends CacheBase
 {
     /**
+     * 缓存驱动
+     * @var string
+     */
+    protected $driver = 'YQ\\Caches\\Drivers\\CacheDriverFile';
+
+    /**
      * 缓存前缀
      * @var string
      */
@@ -18,9 +24,4 @@ class YqWeixinJsapiTicketCache extends CacheBase
      * @var string|int
      */
     protected $minutes = 'forever';
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
 }

@@ -2,9 +2,7 @@
 
 namespace YQ\Caches;
 
-use YQ\Caches\CacheFile;
-
-class CacheBase implements CacheInterface
+class CacheBase
 {
     /**
      * 缓存前缀
@@ -19,10 +17,22 @@ class CacheBase implements CacheInterface
     protected $minutes = 10080;
 
     /**
-     * 获取真实数据接口名字
+     * 使用缓存驱动
      * @var string
      */
-    protected $getReal = 'getReal';
+    protected $driver = 'YQ\\Caches\\Drivers\\CacheDriverFile';
+
+    /**
+     * 缓存驱动配置
+     * @var array
+     */
+    protected $driverParams = [];
+
+    /**
+     * 缓存驱动实例化对象
+     * @var obj
+     */
+    protected $driverObj;
 
     /**
      * 单例模式
@@ -45,21 +55,22 @@ class CacheBase implements CacheInterface
 
     public function __construct()
     {
-        //
+        $class = $this->driver;
+        $this->driverObj = new $class($this->driverParams);
     }
 
     /**
      * 读取缓存唯一key
-     * @param  string|array  $keys    检索key
+     * @param  string|array  $key    检索key
      * @return string
      */
-    public function getUnid($keys)
+    private function getUnid($key)
     {
-        if (is_array($keys)) {
-            ksort($keys);
-            $unid = $this->prefix . ':' . http_build_query($keys);
+        if (is_array($key)) {
+            ksort($key);
+            $unid = $this->prefix . ':' . http_build_query($key);
         } else {
-            $unid = $this->prefix . ':' . $keys;
+            $unid = $this->prefix . ':' . $key;
         }
 
         return $unid;
@@ -67,60 +78,62 @@ class CacheBase implements CacheInterface
 
     /**
      * 是否存在某缓存
-     * @param  string|array         $keys       检索key
+     * @param  string         $key       检索key
      * @return boolean
      */
-    public function has($keys='')
+    public function has($key='')
     {
-        $unid = $this->getUnid($keys);
-        if (CacheFile::getInstance()->has($unid, $this->prefix)) {
-            return true;
+        $unid = $this->getUnid($key);
+        if (!$this->driverObj->has($unid, $this->prefix)) {
+            return false;
         }
+
+        return true;
     }
 
     /**
      * 更新缓存数据
-     * @param  string|array         $keys       检索key
-     * @param  string|array|integer $value      缓存内容
-     * @return void
+     * @param  string   $key       检索key
+     * @param  mixed    $value      缓存内容
+     * @return boolean
      */
-    public function update($keys='', $value)
+    public function update($key='', $value)
     {
-        $unid = $this->getUnid($keys);
+        $unid = $this->getUnid($key);
         $minutes = $this->minutes;
+
+        // 此处采用伪永久缓存，缓存时长为10年
         if ($minutes == 'forever') {
-            CacheFile::getInstance()->forever($unid, $value, $this->prefix);
-        } else {
-            CacheFile::getInstance()->set($unid, $value, $minutes*60, $this->prefix);
+            $minutes = 5256000;
         }
+
+        return $this->driverObj->set($unid, $value, $minutes, $this->prefix);
     }
 
     /**
      * 读取换成数据
-     * @param  string|array         $keys       检索key
-     * @return string|array|integer
+     * @param  string         $key       检索key
+     * @return mixed
      */
-    public function get($keys='')
+    public function get($key='')
     {
-        $unid = $this->getUnid($keys);
-        return CacheFile::getInstance()->get($unid, $this->prefix);
+        $unid = $this->getUnid($key);
+        return $this->driverObj->get($unid, $this->prefix);
     }
 
     /**
      * 记忆读取缓存数据
-     * @param  string|array         $keys       检索key
-     * @return string|array|integer
+     * @param  string         $key       检索key
+     * @return mixed
      */
-    public function remember($keys='')
+    public function remember($key='')
     {
-        $unid = $this->getUnid($keys);
-        $minutes = $this->minutes;
-        $func = $this->getReal;
-        $value = CacheFile::getInstance()->get($unid, $this->prefix);
+        $unid = $this->getUnid($key);
+        $value = $this->driverObj->get($unid, $this->prefix);
         if (!$value) {
-            $value = call_user_func(array($this, $func), $keys);
+            $value = call_user_func(array($this, 'getReal'), $key);
             if (!$value) return;
-            $this->update($keys, $value, $minutes);
+            $this->update($key, $value);
         }
 
         return $value;
@@ -128,31 +141,31 @@ class CacheBase implements CacheInterface
 
     /**
      * 读取真实数据，此接口只能由 remember 来回调
-     * @param  string|array  $keys    检索key
-     * @return string|array|integer
+     * @param  string|array  $key    检索key
+     * @return mixed
      */
-    protected function getReal($keys='')
+    protected function getReal($key='')
     {
         //
     }
 
     /**
      * 从缓存中移除项目
-     * @param  string|array  $keys    检索key
-     * @return void
+     * @param  string|array  $key    检索key
+     * @return boolean
      */
-    public function forget($keys='')
+    public function forget($key='')
     {
-        $unid = $this->getUnid($keys);
-        CacheFile::getInstance()->delete($unid, $this->prefix);
+        $unid = $this->getUnid($key);
+        return $this->driverObj->forget($unid, $this->prefix);
     }
 
     /**
      * 清楚本前缀开头的所有缓存
-     * @return [type] [description]
+     * @return boolean
      */
     public function flush()
     {
-        CacheFile::getInstance()->flush(null, $this->prefix);
+        return $this->driverObj->flush($this->prefix);
     }
 }

@@ -3,6 +3,7 @@
 namespace YQ\Weixin;
 
 use YQ\Weixin\YqWeixin;
+use YQ\YqCurl;
 
 class Oauth
 {
@@ -23,11 +24,11 @@ class Oauth
      * @param  string $callback_url 授权成功回调地址
      * @return string
      */
-    public function loginUrl(string $callback_url)
+    public function loginUrl(string $callback_url, $scope = 'snsapi_userinfo', $state = 'state')
     {
         $redirect_uri = urlencode($callback_url);
-        $appid = $this->yqweixin->config('appid');
-        $other = "response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
+        $appid        = $this->yqweixin->config('appid');
+        $other        = "response_type=code&scope={$scope}&state={$state}#wechat_redirect";
 
         $url = "https://open.weixin.qq.com/connect/oauth2/authorize";
         $url .= "?appid={$appid}&redirect_uri={$redirect_uri}&{$other}";
@@ -61,7 +62,7 @@ class Oauth
         $openid = $res['openid'];
 
         $url = "https://api.weixin.qq.com/sns/userinfo";
-        $params = "access_token={$access_token}&openid={$openid}&lang=zh_CN";
+        $params = "access_token={$user_access_token}&openid={$openid}&lang=zh_CN";
         $user = YqCurl::curl($url, $params, 0, 1);
         if (!$user) {
             return false;
